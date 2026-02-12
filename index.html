@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitTrack - Daily Fitness Tracker</title>
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface-hover: #222633;
+      --border: #2a2e3d;
+      --text: #e4e6f0;
+      --text-muted: #8b8fa3;
+      --accent: #6c63ff;
+      --accent-glow: rgba(108, 99, 255, 0.25);
+      --green: #2ecc71;
+      --green-glow: rgba(46, 204, 113, 0.25);
+      --orange: #f39c12;
+      --orange-glow: rgba(243, 156, 18, 0.25);
+      --red: #e74c3c;
+      --gradient: linear-gradient(135deg, #6c63ff, #3b82f6);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+    }
+
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--gradient);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 15px var(--accent-glow);
+    }
+
+    .streak-badge {
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .streak-badge .fire { color: var(--orange); }
+
+    /* Main Layout */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* Input Section */
+    .input-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .input-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--gradient);
+    }
+
+    .input-section h2 {
+      font-size: 1.25rem;
+      margin-bottom: 24px;
+      font-weight: 600;
+    }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      align-items: end;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .input-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .input-group input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      font-size: 1.1rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+
+    .input-group input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .input-group input::placeholder {
+      color: #4a4e5e;
+    }
+
+    .btn-log {
+      background: var(--gradient);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 14px 28px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 15px var(--accent-glow);
+      white-space: nowrap;
+    }
+
+    .btn-log:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 25px var(--accent-glow);
+    }
+
+    .btn-log:active {
+      transform: translateY(0);
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+
+    .stat-card:hover {
+      border-color: var(--accent);
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 4px;
+    }
+
+    .stat-value.weight-color { color: var(--accent); }
+    .stat-value.pushup-color { color: var(--green); }
+    .stat-value.streak-color { color: var(--orange); }
+    .stat-value.total-color { color: #3b82f6; }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      font-weight: 500;
+    }
+
+    /* Charts Section */
+    .charts-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+
+    .chart-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chart-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .chart-dot.purple { background: var(--accent); }
+    .chart-dot.green { background: var(--green); }
+
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 200px;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* History Table */
+    .history-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .history-header {
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .history-header h3 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .btn-clear {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-clear:hover {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .history-table th {
+      text-align: left;
+      padding: 14px 28px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      font-weight: 600;
+      background: var(--bg);
+    }
+
+    .history-table td {
+      padding: 16px 28px;
+      border-top: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+
+    .history-table tr:hover td {
+      background: var(--surface-hover);
+    }
+
+    .change-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .change-badge.down { background: rgba(46, 204, 113, 0.15); color: var(--green); }
+    .change-badge.up { background: rgba(231, 76, 60, 0.15); color: var(--red); }
+    .change-badge.neutral { background: rgba(139, 143, 163, 0.15); color: var(--text-muted); }
+
+    .pushup-bar-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pushup-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--bg);
+      border-radius: 3px;
+      overflow: hidden;
+      max-width: 120px;
+    }
+
+    .pushup-bar-fill {
+      height: 100%;
+      background: var(--green);
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+      opacity: 0;
+    }
+
+    .history-table tr:hover .delete-btn {
+      opacity: 1;
+    }
+
+    .delete-btn:hover {
+      background: rgba(231, 76, 60, 0.15);
+      color: var(--red);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state .icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .empty-state p {
+      font-size: 0.95rem;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      background: var(--green);
+      color: white;
+      padding: 14px 24px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.9rem;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .input-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .charts-section {
+        grid-template-columns: 1fr;
+      }
+
+      .header-inner {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .history-table th,
+      .history-table td {
+        padding: 12px 16px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px 16px;
+      }
+
+      .input-section {
+        padding: 24px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">&#9883;</div>
+        <span>FitTrack</span>
+      </div>
+      <div class="streak-badge">
+        <span class="fire">&#9733;</span>
+        <span id="streakText">0 day streak</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Log Entry -->
+    <section class="input-section">
+      <h2>Log Today's Progress</h2>
+      <div class="input-grid">
+        <div class="input-group">
+          <label for="dateInput">Date</label>
+          <input type="date" id="dateInput">
+        </div>
+        <div class="input-group">
+          <label for="weightInput">Weight (lbs)</label>
+          <input type="number" id="weightInput" placeholder="e.g. 175" step="0.1" min="0">
+        </div>
+        <div class="input-group">
+          <label for="pushupInput">Push-ups</label>
+          <input type="number" id="pushupInput" placeholder="e.g. 30" min="0">
+        </div>
+      </div>
+      <div style="margin-top: 20px; text-align: right;">
+        <button class="btn-log" id="logBtn">Log Entry</button>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value weight-color" id="currentWeight">--</div>
+        <div class="stat-label">Current Weight</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value pushup-color" id="todayPushups">--</div>
+        <div class="stat-label">Today's Push-ups</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value streak-color" id="currentStreak">0</div>
+        <div class="stat-label">Day Streak</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value total-color" id="totalPushups">0</div>
+        <div class="stat-label">Total Push-ups</div>
+      </div>
+    </section>
+
+    <!-- Charts -->
+    <section class="charts-section">
+      <div class="chart-card">
+        <h3><span class="chart-dot purple"></span> Weight Trend</h3>
+        <div class="chart-container">
+          <canvas id="weightChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3><span class="chart-dot green"></span> Push-ups History</h3>
+        <div class="chart-container">
+          <canvas id="pushupChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- History -->
+    <section class="history-section">
+      <div class="history-header">
+        <h3>History</h3>
+        <button class="btn-clear" id="clearBtn">Clear All</button>
+      </div>
+      <div id="historyContent">
+        <div class="empty-state">
+          <div class="icon">&#128203;</div>
+          <p>No entries yet. Start logging your progress!</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="toast" id="toast">Entry logged!</div>
+
+  <script>
+    // ── Data Layer ──
+    function getData() {
+      try {
+        return JSON.parse(localStorage.getItem('fittrack_data')) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveData(data) {
+      localStorage.setItem('fittrack_data', JSON.stringify(data));
+    }
+
+    function formatDate(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function shortDate(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function todayStr() {
+      const d = new Date();
+      return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+    }
+
+    // ── Init ──
+    const dateInput = document.getElementById('dateInput');
+    const weightInput = document.getElementById('weightInput');
+    const pushupInput = document.getElementById('pushupInput');
+    const logBtn = document.getElementById('logBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    dateInput.value = todayStr();
+
+    // ── Log Entry ──
+    logBtn.addEventListener('click', () => {
+      const date = dateInput.value;
+      const weight = parseFloat(weightInput.value);
+      const pushups = parseInt(pushupInput.value, 10);
+
+      if (!date) return showToast('Please select a date', true);
+      if (isNaN(weight) && isNaN(pushups)) return showToast('Enter weight or push-ups', true);
+
+      const data = getData();
+      const existing = data.findIndex(e => e.date === date);
+
+      const entry = {
+        date,
+        weight: isNaN(weight) ? null : weight,
+        pushups: isNaN(pushups) ? null : pushups,
+      };
+
+      if (existing >= 0) {
+        if (entry.weight !== null) data[existing].weight = entry.weight;
+        if (entry.pushups !== null) data[existing].pushups = entry.pushups;
+      } else {
+        data.push(entry);
+      }
+
+      data.sort((a, b) => a.date.localeCompare(b.date));
+      saveData(data);
+
+      weightInput.value = '';
+      pushupInput.value = '';
+      dateInput.value = todayStr();
+
+      showToast('Entry logged!');
+      render();
+    });
+
+    // Enter key support
+    [weightInput, pushupInput].forEach(input => {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') logBtn.click();
+      });
+    });
+
+    // ── Clear All ──
+    clearBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to delete all entries?')) {
+        saveData([]);
+        render();
+        showToast('All data cleared');
+      }
+    });
+
+    // ── Delete Single Entry ──
+    function deleteEntry(date) {
+      const data = getData().filter(e => e.date !== date);
+      saveData(data);
+      render();
+      showToast('Entry removed');
+    }
+
+    // ── Toast ──
+    function showToast(msg, isError) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.style.background = isError ? 'var(--red)' : 'var(--green)';
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    // ── Calculate Streak ──
+    function calcStreak(data) {
+      if (!data.length) return 0;
+      const dates = [...new Set(data.map(e => e.date))].sort().reverse();
+      let streak = 0;
+      const today = new Date(todayStr() + 'T00:00:00');
+
+      for (let i = 0; i < dates.length; i++) {
+        const expected = new Date(today);
+        expected.setDate(expected.getDate() - i);
+        const expStr = expected.getFullYear() + '-' +
+          String(expected.getMonth() + 1).padStart(2, '0') + '-' +
+          String(expected.getDate()).padStart(2, '0');
+
+        if (dates[i] === expStr) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+      return streak;
+    }
+
+    // ── Render Everything ──
+    function render() {
+      const data = getData();
+      updateStats(data);
+      drawCharts(data);
+      renderHistory(data);
+    }
+
+    // ── Stats ──
+    function updateStats(data) {
+      const lastWeight = [...data].reverse().find(e => e.weight !== null);
+      const todayEntry = data.find(e => e.date === todayStr());
+      const streak = calcStreak(data);
+      const totalPU = data.reduce((sum, e) => sum + (e.pushups || 0), 0);
+
+      document.getElementById('currentWeight').textContent =
+        lastWeight ? lastWeight.weight.toFixed(1) : '--';
+      document.getElementById('todayPushups').textContent =
+        (todayEntry && todayEntry.pushups !== null) ? todayEntry.pushups : '--';
+      document.getElementById('currentStreak').textContent = streak;
+      document.getElementById('totalPushups').textContent = totalPU.toLocaleString();
+      document.getElementById('streakText').textContent =
+        streak + ' day streak';
+    }
+
+    // ── Charts (pure canvas, no dependencies) ──
+    function drawCharts(data) {
+      drawLineChart('weightChart', data.filter(e => e.weight !== null), 'weight', '#6c63ff', 'var(--accent-glow)');
+      drawBarChart('pushupChart', data.filter(e => e.pushups !== null), 'pushups', '#2ecc71');
+    }
+
+    function drawLineChart(canvasId, data, key, color, glowColor) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.parentElement.getBoundingClientRect();
+
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      const w = rect.width;
+      const h = rect.height;
+      const pad = { top: 20, right: 20, bottom: 35, left: 50 };
+      const plotW = w - pad.left - pad.right;
+      const plotH = h - pad.top - pad.bottom;
+
+      ctx.clearRect(0, 0, w, h);
+
+      if (data.length < 2) {
+        ctx.fillStyle = '#4a4e5e';
+        ctx.font = '14px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Log at least 2 entries to see the trend', w / 2, h / 2);
+        return;
+      }
+
+      const recent = data.slice(-30);
+      const vals = recent.map(e => e[key]);
+      const min = Math.min(...vals);
+      const max = Math.max(...vals);
+      const range = max - min || 1;
+
+      const points = recent.map((e, i) => ({
+        x: pad.left + (i / (recent.length - 1)) * plotW,
+        y: pad.top + plotH - ((e[key] - min) / range) * plotH,
+        label: shortDate(e.date),
+        val: e[key],
+      }));
+
+      // Grid lines
+      ctx.strokeStyle = '#1e2230';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.top + (plotH / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(w - pad.right, y);
+        ctx.stroke();
+
+        const val = max - (range / 4) * i;
+        ctx.fillStyle = '#4a4e5e';
+        ctx.font = '11px -apple-system, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(val.toFixed(1), pad.left - 8, y + 4);
+      }
+
+      // X labels
+      const step = Math.max(1, Math.floor(recent.length / 5));
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#4a4e5e';
+      ctx.font = '10px -apple-system, sans-serif';
+      points.forEach((p, i) => {
+        if (i % step === 0 || i === points.length - 1) {
+          ctx.fillText(p.label, p.x, h - pad.bottom + 20);
+        }
+      });
+
+      // Gradient fill
+      const gradient = ctx.createLinearGradient(0, pad.top, 0, pad.top + plotH);
+      gradient.addColorStop(0, color + '30');
+      gradient.addColorStop(1, color + '00');
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, pad.top + plotH);
+      points.forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.lineTo(points[points.length - 1].x, pad.top + plotH);
+      ctx.closePath();
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      // Line
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) {
+        const prev = points[i - 1];
+        const curr = points[i];
+        const cpx = (prev.x + curr.x) / 2;
+        ctx.bezierCurveTo(cpx, prev.y, cpx, curr.y, curr.x, curr.y);
+      }
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Dots
+      points.forEach((p, i) => {
+        if (i === points.length - 1 || points.length <= 10) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, i === points.length - 1 ? 5 : 3, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+          if (i === points.length - 1) {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 9, 0, Math.PI * 2);
+            ctx.strokeStyle = color + '40';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+        }
+      });
+    }
+
+    function drawBarChart(canvasId, data, key, color) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.parentElement.getBoundingClientRect();
+
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      const w = rect.width;
+      const h = rect.height;
+      const pad = { top: 20, right: 20, bottom: 35, left: 40 };
+      const plotW = w - pad.left - pad.right;
+      const plotH = h - pad.top - pad.bottom;
+
+      ctx.clearRect(0, 0, w, h);
+
+      if (!data.length) {
+        ctx.fillStyle = '#4a4e5e';
+        ctx.font = '14px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('No push-up data yet', w / 2, h / 2);
+        return;
+      }
+
+      const recent = data.slice(-14);
+      const maxVal = Math.max(...recent.map(e => e[key])) || 1;
+
+      const barGap = 6;
+      const barW = Math.min(32, (plotW / recent.length) - barGap);
+
+      // Grid
+      ctx.strokeStyle = '#1e2230';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.top + (plotH / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(w - pad.right, y);
+        ctx.stroke();
+
+        const val = maxVal - (maxVal / 4) * i;
+        ctx.fillStyle = '#4a4e5e';
+        ctx.font = '11px -apple-system, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(Math.round(val), pad.left - 8, y + 4);
+      }
+
+      // Bars
+      recent.forEach((entry, i) => {
+        const x = pad.left + (i / recent.length) * plotW + (plotW / recent.length - barW) / 2;
+        const barH = (entry[key] / maxVal) * plotH;
+        const y = pad.top + plotH - barH;
+        const radius = Math.min(4, barW / 2);
+
+        // Bar with rounded top
+        ctx.beginPath();
+        ctx.moveTo(x, pad.top + plotH);
+        ctx.lineTo(x, y + radius);
+        ctx.arcTo(x, y, x + radius, y, radius);
+        ctx.arcTo(x + barW, y, x + barW, y + radius, radius);
+        ctx.lineTo(x + barW, pad.top + plotH);
+        ctx.closePath();
+
+        const gradient = ctx.createLinearGradient(0, y, 0, pad.top + plotH);
+        gradient.addColorStop(0, color);
+        gradient.addColorStop(1, color + '40');
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        // Label
+        ctx.fillStyle = '#4a4e5e';
+        ctx.font = '10px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(shortDate(entry.date), x + barW / 2, h - pad.bottom + 18);
+      });
+    }
+
+    // ── History Table ──
+    function renderHistory(data) {
+      const container = document.getElementById('historyContent');
+
+      if (!data.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">&#128203;</div>
+            <p>No entries yet. Start logging your progress!</p>
+          </div>`;
+        return;
+      }
+
+      const reversed = [...data].reverse();
+      const maxPU = Math.max(...data.map(e => e.pushups || 0)) || 1;
+
+      let html = `<table class="history-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Weight</th>
+            <th>Change</th>
+            <th>Push-ups</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+      reversed.forEach((entry, idx) => {
+        const prevIdx = data.indexOf(entry) - 1;
+        const prev = prevIdx >= 0 ? data[prevIdx] : null;
+        let changeBadge = '';
+
+        if (entry.weight !== null && prev && prev.weight !== null) {
+          const diff = entry.weight - prev.weight;
+          const cls = diff < 0 ? 'down' : diff > 0 ? 'up' : 'neutral';
+          const arrow = diff < 0 ? '&#9660;' : diff > 0 ? '&#9650;' : '&#9644;';
+          changeBadge = `<span class="change-badge ${cls}">${arrow} ${Math.abs(diff).toFixed(1)}</span>`;
+        } else {
+          changeBadge = '<span class="change-badge neutral">--</span>';
+        }
+
+        const pct = entry.pushups !== null ? (entry.pushups / maxPU) * 100 : 0;
+
+        html += `<tr>
+          <td>${formatDate(entry.date)}</td>
+          <td>${entry.weight !== null ? entry.weight.toFixed(1) : '--'}</td>
+          <td>${changeBadge}</td>
+          <td>
+            <div class="pushup-bar-cell">
+              <span>${entry.pushups !== null ? entry.pushups : '--'}</span>
+              ${entry.pushups !== null ? `<div class="pushup-bar"><div class="pushup-bar-fill" style="width:${pct}%"></div></div>` : ''}
+            </div>
+          </td>
+          <td><button class="delete-btn" onclick="deleteEntry('${entry.date}')">&#10005;</button></td>
+        </tr>`;
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    // ── Resize handler ──
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => drawCharts(getData()), 150);
+    });
+
+    // ── Initial render ──
+    render();
+  </script>
+</body>
+</html>
